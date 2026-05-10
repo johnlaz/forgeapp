@@ -245,6 +245,10 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 .scratch-saved{font-size:11px;color:var(--green);opacity:0;transition:opacity .3s}
 .scratch-saved.show{opacity:1}
 
+/* CARD HEAD THUMBNAIL */
+.card-head-thumb{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border);flex-shrink:0;cursor:pointer;transition:opacity .18s,border-color .18s,transform .18s;margin-right:4px}
+.card-head-thumb:hover{opacity:.88;border-color:rgba(201,162,39,.55);transform:scale(1.04)}
+
 /* PROJECT IMAGE */
 .proj-img-wrap{position:relative;margin-bottom:14px}
 .proj-img-preview{width:100%;max-height:220px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--border);display:block}
@@ -338,8 +342,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 
 /* AI COMPILE */
 .compile-output{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;font-size:13px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap;min-height:120px;max-height:420px;overflow-y:auto}
-.compile-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
-.compile-actions .btn-generate{order:-1;margin-right:auto}
+.compile-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
 
 /* PRINT SELECT */
 .print-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto}
@@ -793,8 +796,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
     <div class="onboard-body" id="onboardBody"></div>
     <div class="onboard-footer">
       <div class="onboard-dots" id="onboardDots"></div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-ghost btn-sm" onclick="_closeOnboarding()" style="color:var(--text-muted);font-size:11px">Skip</button>
+      <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" id="onboardPrev" onclick="onboardPrev()" style="display:none">&#8592; Back</button>
         <button class="btn btn-primary btn-sm" id="onboardNext" onclick="onboardNext()">Next &#8594;</button>
       </div>
@@ -1090,10 +1092,10 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
     <div class="modal-body">
       <div class="compile-output" id="compileOutput">Hit "Generate" to compile this project into a clean summary.</div>
       <div class="compile-actions">
-        <button class="btn btn-ghost btn-sm btn-generate" id="compileGenBtn" onclick="runCompile()">⚡ Generate</button>
+        <button class="btn btn-ghost btn-sm" id="compileGenBtn" onclick="runCompile()">⚡ Generate</button>
         <button class="btn btn-ghost btn-sm" onclick="copyCompile()">📋 Copy</button>
-        <button class="btn btn-teal btn-sm" onclick="exportCompilePNG()">🖼 PNG Card</button>
-        <button class="btn btn-primary btn-sm" onclick="printCompile()">⎙ Print</button>
+        <button class="btn btn-teal btn-sm" onclick="exportCompilePNG()">🖼 Save Card PNG</button>
+        <button class="btn btn-primary btn-sm" onclick="printCompile()">⎙ Print Summary</button>
       </div>
     </div>
   </div>
@@ -1382,12 +1384,16 @@ function renderStackCard(p) {
   const statusCls = 'status-'+p.status.replace(' ','-');
   const badgeLabel = p.customLabel || p.template;
   const tagHtml = (p.tags||[]).map(t => '<span class="tag">'+esc(t)+'</span>').join('');
+  const imgThumb = p.projectImage
+    ? '<img class="card-head-thumb" src="'+p.projectImage+'" alt="Project photo" title="'+esc(p.projectTitle)+'" onclick="event.stopPropagation();switchTab(\''+p.projectId+'\',\'image\')">'
+    : '';
   return '<div class="project-card'+(expanded?' is-expanded':'')+'" id="pc-'+p.projectId+'">'+
     '<div class="card-head" onclick="toggleCard(\''+p.projectId+'\')">'+
-    '<span class="template-badge '+getBadgeClass(p.template)+'">'+esc(badgeLabel)+'</span>'+
+    imgThumb+
     '<div class="card-title-block">'+
     '<div class="card-title">'+esc(p.projectTitle)+'</div>'+
     '<div class="card-meta">'+
+    '<span class="template-badge '+getBadgeClass(p.template)+'" style="font-size:9px;padding:1px 7px">'+esc(badgeLabel)+'</span>'+
     '<span>📝 '+p.forgeLog.length+' log'+(p.forgeLog.length!==1?'s':'')+'</span>'+
     '<span>🔩 '+p.bom.length+' items · $'+invested.toFixed(2)+'</span>'+
     '<span>📄 '+p.vaultLinks.length+' doc'+(p.vaultLinks.length!==1?'s':'')+'</span>'+
@@ -3280,7 +3286,7 @@ function exportCompilePNG() {
     Verification:'#10b981','Final Build':'#10b981',Complete:'#10b981'
   }[p.activeStage] || '#64748b';
 
-  const W = 700, H = 420;
+  const W = 900, H = 480;  // wider card to accommodate image panel
 
   // Shrink long text to fit SVG text elements
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3317,16 +3323,64 @@ function exportCompilePNG() {
     return g;
   }).join('');
 
-  // Project image overlay - drawn directly on canvas (not in SVG, to avoid taint/security issues)
+  // ── Image panel constants ──────────────────────────────
+  const IMG_X = 580, IMG_Y = 80, IMG_W = 280, IMG_H = 280;
   const hasImg = !!(p.projectImage);
 
-  // Remove imgLayer from SVG entirely - we'll composite it on the canvas directly
-  const imgLayer = '';  // placeholder kept for SVG structure
-
-  const titleText = esc(p.projectTitle.slice(0, 46));
+  const titleText = esc(p.projectTitle.slice(0, hasImg ? 38 : 46));
   const catText   = esc((p.customLabel||p.template).toUpperCase());
   const statText  = esc(p.status.toUpperCase());
   const stageText = esc((p.activeStage||'').toUpperCase());
+
+  // Summary lines — left column only (narrower when image present)
+  const colW = hasImg ? 520 : W - 72;
+  const maxChars = hasImg ? 55 : 70;
+  const sumLines = text.split('\n')
+    .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('*'))
+    .slice(0,3).map(l => esc(l.replace(/^[-•]\s*/,'').trim().slice(0, maxChars)));
+
+  // BOM mini cards — left column only
+  const bomSlice = p.bom.slice(0,4);
+  const cardW2 = Math.floor((colW - 36 - bomSlice.length * 8) / Math.max(bomSlice.length,1));
+  const bomCardsSvg = bomSlice.map((b,i) => {
+    const cx = 36 + i*(cardW2+8);
+    const col = b.status==='Purchased' ? '#10b981' : '#94a3b8';
+    return `<g>
+      <rect x="${cx}" y="286" width="${cardW2}" height="54" rx="7" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.11)" stroke-width="1"/>
+      <text x="${cx+8}" y="302" font-size="8.5" fill="#94a3b8" font-family="Georgia,serif">${esc(b.item.slice(0,16))}</text>
+      <text x="${cx+8}" y="320" font-size="13" fill="#e2e8f0" font-family="Georgia,serif" font-weight="700">$${parseFloat(b.cost||0).toFixed(2)}</text>
+      <circle cx="${cx+8+6}" cy="332" r="4" fill="${col}" opacity="0.8"/>
+      <text x="${cx+8+14}" y="336" font-size="8" fill="${col}" font-family="sans-serif">${b.status}</text>
+    </g>`;
+  }).join('');
+
+  // Tags
+  let tagX = 36;
+  const tagsSvg = (p.tags||[]).slice(0,5).map(t => {
+    const tw = esc(t).length * 6.5 + 18;
+    if (tagX + tw > colW) return '';
+    const g = `<g>
+      <rect x="${tagX}" y="256" width="${tw}" height="18" rx="9" fill="rgba(139,92,246,0.18)" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
+      <text x="${tagX+9}" y="269" font-size="9" fill="#a78bfa" font-family="sans-serif" font-weight="600">#${esc(t)}</text>
+    </g>`;
+    tagX += tw + 7;
+    return g;
+  }).join('');
+
+  // Image panel SVG placeholder rect (actual image drawn on canvas)
+  const imgPanelSvg = hasImg ? `
+  <!-- image panel border/placeholder -->
+  <rect x="${IMG_X}" y="${IMG_Y}" width="${IMG_W}" height="${IMG_H}" rx="10"
+        fill="rgba(255,255,255,0.04)" stroke="rgba(201,162,39,0.25)" stroke-width="1.5"/>
+  <text x="${IMG_X + IMG_W/2}" y="${IMG_Y + IMG_H/2}" font-size="11" fill="#475569"
+        font-family="sans-serif" text-anchor="middle" dominant-baseline="middle">Photo</text>
+  <!-- gold corner accent top-left -->
+  <rect x="${IMG_X}" y="${IMG_Y}" width="32" height="2" rx="1" fill="#c9a227" opacity="0.7"/>
+  <rect x="${IMG_X}" y="${IMG_Y}" width="2" height="32" rx="1" fill="#c9a227" opacity="0.7"/>
+  <!-- gold corner accent bottom-right -->
+  <rect x="${IMG_X+IMG_W-32}" y="${IMG_Y+IMG_H-2}" width="32" height="2" rx="1" fill="#c9a227" opacity="0.7"/>
+  <rect x="${IMG_X+IMG_W-2}" y="${IMG_Y+IMG_H-32}" width="2" height="32" rx="1" fill="#c9a227" opacity="0.7"/>
+  ` : '';
 
   const sumSvg = sumLines.map((l,i) =>
     `<text x="36" y="${152 + i*19}" font-size="12" fill="#cbd5e1" font-family="Georgia,serif">${l}</text>`
@@ -3348,12 +3402,12 @@ function exportCompilePNG() {
     <stop offset="100%" stop-color="rgba(45,212,191,0)"/>
   </linearGradient>
   <clipPath id="cardClip"><rect width="${W}" height="${H}" rx="16"/></clipPath>
+  <clipPath id="imgClip"><rect x="${IMG_X}" y="${IMG_Y}" width="${IMG_W}" height="${IMG_H}" rx="10"/></clipPath>
 </defs>
 <g clip-path="url(#cardClip)">
   <rect width="${W}" height="${H}" fill="url(#bg)"/>
-  ${imgLayer}
-  <circle cx="${W}" cy="0" r="280" fill="rgba(201,162,39,0.035)"/>
-  <circle cx="0" cy="${H}" r="220" fill="rgba(45,212,191,0.03)"/>
+  <circle cx="${W}" cy="0" r="320" fill="rgba(201,162,39,0.03)"/>
+  <circle cx="0" cy="${H}" r="260" fill="rgba(45,212,191,0.025)"/>
   <!-- top accent -->
   <rect x="0" y="0" width="${W}" height="3" fill="url(#gLine)"/>
   <!-- logo mark -->
@@ -3362,7 +3416,7 @@ function exportCompilePNG() {
   <text x="80" y="38" font-size="15" font-family="Georgia,serif" fill="#e2e8f0" font-weight="700">LazForge</text>
   <text x="80" y="52" font-size="8.5" font-family="sans-serif" fill="#64748b" letter-spacing="1.4">PROJECT SUMMARY</text>
   <!-- divider -->
-  <rect x="36" y="72" width="${W-72}" height="1" fill="url(#gLine)"/>
+  <rect x="36" y="72" width="${colW}" height="1" fill="url(#gLine)"/>
   <!-- title -->
   <text x="36" y="102" font-size="19" font-family="Georgia,serif" font-weight="700" fill="#f1f5f9">${titleText}</text>
   <!-- pills row -->
@@ -3379,27 +3433,24 @@ function exportCompilePNG() {
   <!-- BOM mini-cards -->
   ${bomCardsSvg}
   ${p.bom.length > 4 ? `<text x="${36+bomSlice.length*(cardW2+8)+4}" y="316" font-size="10" fill="#475569" font-family="sans-serif">+${p.bom.length-4} more</text>` : ''}
+  <!-- image panel (actual image drawn on canvas) -->
+  ${imgPanelSvg}
   <!-- stat bar -->
   <rect x="0" y="${H-64}" width="${W}" height="64" fill="rgba(255,255,255,0.025)"/>
   <rect x="0" y="${H-64}" width="${W}" height="1" fill="rgba(201,162,39,0.18)"/>
-  <!-- stat 1: log entries -->
-  <text x="52" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">LOG ENTRIES</text>
-  <text x="52" y="${H-18}" font-size="20" fill="#f1f5f9" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${p.forgeLog.length}</text>
-  <!-- stat 2: bom -->
-  <text x="156" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">BOM ITEMS</text>
-  <text x="156" y="${H-18}" font-size="20" fill="#f1f5f9" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${p.bom.length}</text>
-  <!-- stat 3: invested -->
-  <text x="268" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">INVESTED</text>
-  <text x="268" y="${H-18}" font-size="20" fill="#c9a227" font-family="Georgia,serif" font-weight="700" text-anchor="middle">$${invested.toFixed(2)}</text>
-  <!-- stat 4: est cost -->
-  <text x="392" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">EST. COST</text>
-  <text x="392" y="${H-18}" font-size="20" fill="#8b5cf6" font-family="Georgia,serif" font-weight="700" text-anchor="middle">$${budgeted.toFixed(2)}</text>
-  <!-- stat 5: variance -->
-  <text x="512" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">VARIANCE</text>
-  <text x="512" y="${H-18}" font-size="20" fill="${varColor}" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${varSign}$${Math.abs(variance).toFixed(2)}</text>
-  <!-- stat 6: stage -->
-  <text x="630" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">STAGE</text>
-  <text x="630" y="${H-18}" font-size="10" fill="${stageClr}" font-family="sans-serif" font-weight="700" text-anchor="middle">${stageText||'\u2014'}</text>
+  <!-- stats: spread across full width -->
+  <text x="60"  y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">LOG ENTRIES</text>
+  <text x="60"  y="${H-18}" font-size="20" fill="#f1f5f9" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${p.forgeLog.length}</text>
+  <text x="195" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">BOM ITEMS</text>
+  <text x="195" y="${H-18}" font-size="20" fill="#f1f5f9" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${p.bom.length}</text>
+  <text x="340" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">INVESTED</text>
+  <text x="340" y="${H-18}" font-size="20" fill="#c9a227" font-family="Georgia,serif" font-weight="700" text-anchor="middle">$${invested.toFixed(2)}</text>
+  <text x="490" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">EST. COST</text>
+  <text x="490" y="${H-18}" font-size="20" fill="#8b5cf6" font-family="Georgia,serif" font-weight="700" text-anchor="middle">$${budgeted.toFixed(2)}</text>
+  <text x="650" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">VARIANCE</text>
+  <text x="650" y="${H-18}" font-size="20" fill="${varColor}" font-family="Georgia,serif" font-weight="700" text-anchor="middle">${varSign}$${Math.abs(variance).toFixed(2)}</text>
+  <text x="820" y="${H-40}" font-size="8.5" fill="#64748b" font-family="sans-serif" font-weight="700" text-anchor="middle">STAGE</text>
+  <text x="820" y="${H-18}" font-size="10" fill="${stageClr}" font-family="sans-serif" font-weight="700" text-anchor="middle">${stageText||'\u2014'}</text>
   <!-- bottom teal accent -->
   <rect x="0" y="${H-3}" width="${W}" height="3" fill="url(#tLine)"/>
 </g>
@@ -3407,17 +3458,17 @@ function exportCompilePNG() {
 
   const blob = new Blob([svg], {type:'image/svg+xml'});
   const url  = URL.createObjectURL(blob);
-  const img  = new Image();
-  img.onload = () => {
+  const svgImg = new Image();
+  svgImg.onload = () => {
     const canvas = document.createElement('canvas');
     canvas.width  = W * 2;
     canvas.height = H * 2;
     const ctx = canvas.getContext('2d');
     ctx.scale(2, 2);
 
-    // If project image exists, draw it as a faint background layer first
-    const finalize = () => {
-      ctx.drawImage(img, 0, 0);
+    const finalizePNG = () => {
+      // Draw the SVG card on top of everything
+      ctx.drawImage(svgImg, 0, 0);
       URL.revokeObjectURL(url);
       canvas.toBlob(b => {
         const a = document.createElement('a');
@@ -3426,15 +3477,14 @@ function exportCompilePNG() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 2000);
       }, 'image/png');
-      toast('Project card saved as PNG (' + W*2 + '×' + H*2 + ').', 'success');
+      toast('Project card saved as PNG (' + W*2 + '\xd7' + H*2 + ').', 'success');
     };
 
     if (hasImg) {
       const projImg = new Image();
       projImg.onload = () => {
-        // Draw project image as subtle background (clipped to card dimensions)
+        // 1. Draw subtle full-bleed background tint first (before SVG)
         ctx.save();
-        // Rounded rect clip
         const r = 16;
         ctx.beginPath();
         ctx.moveTo(r,0); ctx.lineTo(W-r,0); ctx.quadraticCurveTo(W,0,W,r);
@@ -3442,24 +3492,49 @@ function exportCompilePNG() {
         ctx.lineTo(r,H); ctx.quadraticCurveTo(0,H,0,H-r);
         ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0); ctx.closePath();
         ctx.clip();
-        // Cover fill
-        const scale = Math.max(W/projImg.width, H/projImg.height);
-        const sw = projImg.width*scale, sh = projImg.height*scale;
-        const sx = (W-sw)/2, sy = (H-sh)/2;
-        ctx.globalAlpha = 0.12;
-        ctx.drawImage(projImg, sx, sy, sw, sh);
+        const bgScale = Math.max(W/projImg.width, H/projImg.height);
+        const bgW = projImg.width*bgScale, bgH = projImg.height*bgScale;
+        ctx.globalAlpha = 0.10;
+        ctx.drawImage(projImg, (W-bgW)/2, (H-bgH)/2, bgW, bgH);
         ctx.globalAlpha = 1;
         ctx.restore();
-        finalize();
+
+        // 2. Draw SVG (which has the image panel placeholder rect)
+        ctx.drawImage(svgImg, 0, 0);
+
+        // 3. Draw clean project image into the right-side panel, clipped and fitted
+        ctx.save();
+        ctx.beginPath();
+        const ir = 10, ix = IMG_X, iy = IMG_Y, iw = IMG_W, ih = IMG_H;
+        ctx.moveTo(ix+ir, iy); ctx.lineTo(ix+iw-ir, iy); ctx.quadraticCurveTo(ix+iw,iy,ix+iw,iy+ir);
+        ctx.lineTo(ix+iw,iy+ih-ir); ctx.quadraticCurveTo(ix+iw,iy+ih,ix+iw-ir,iy+ih);
+        ctx.lineTo(ix+ir,iy+ih); ctx.quadraticCurveTo(ix,iy+ih,ix,iy+ih-ir);
+        ctx.lineTo(ix,iy+ir); ctx.quadraticCurveTo(ix,iy,ix+ir,iy); ctx.closePath();
+        ctx.clip();
+        // object-fit: cover
+        const scale = Math.max(iw/projImg.width, ih/projImg.height);
+        const dw = projImg.width*scale, dh = projImg.height*scale;
+        ctx.drawImage(projImg, ix+(iw-dw)/2, iy+(ih-dh)/2, dw, dh);
+        ctx.restore();
+
+        URL.revokeObjectURL(url);
+        canvas.toBlob(b => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = (p.projectTitle.replace(/[^a-z0-9]/gi,'-').toLowerCase()||'project')+'-card.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }, 'image/png');
+        toast('Project card saved as PNG (' + W*2 + '\xd7' + H*2 + ').', 'success');
       };
-      projImg.onerror = finalize; // fallback: skip image if it fails
+      projImg.onerror = finalizePNG;
       projImg.src = p.projectImage;
     } else {
-      finalize();
+      finalizePNG();
     }
   };
-  img.onerror = () => toast('PNG export failed — try again.','error');
-  img.src = url;
+  svgImg.onerror = () => toast('PNG export failed — try again.','error');
+  svgImg.src = url;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -3488,7 +3563,7 @@ const ONBOARD_STEPS = [
     icon: '🤖',
     title: 'AI Brainstorm & Summary',
     desc: 'Add a <strong>Groq API key</strong> in Settings to unlock AI. Use <strong>Brainstorm</strong> to think through problems, then "Forge to Log" to save the session. Use <strong>AI Summary</strong> to compile a full report — then print or export as a PNG card.',
-    tip: '<strong>Tip:</strong> Groq is free — <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">get your API key at console.groq.com</a> and paste it in Settings.'
+    tip: '<strong>Tip:</strong> Groq is free — get a key at console.groq.com and paste it in Settings.'
   },
   {
     icon: '🔍',
