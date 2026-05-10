@@ -170,7 +170,14 @@ nav {
   color: var(--teal);
   border: 1px solid var(--teal-border);
 }
-.btn-teal:hover { background: rgba(45,212,191,.15); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,212,191,.15); }
+.btn-teal:hover { background: rgba(176,106,255,.15); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(176,106,255,.2); }
+
+.btn-apk {
+  background: rgba(59,130,246,.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,.3);
+}
+.btn-apk:hover { background: rgba(59,130,246,.18); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.2); }
 
 .btn-lg {
   padding: 14px 32px;
@@ -1088,7 +1095,7 @@ footer {
   </a>
   <div class="nav-cta">
     <a href="#features" class="btn btn-ghost" style="padding:8px 16px;font-size:13px;">Features</a>
-    <a href="#launch" class="btn btn-gold" style="padding:8px 18px;font-size:13px;" onclick="/* wire up to PWA */">Open App ↗</a>
+    <a href="https://johnlaz.github.io/forgeapp/app/index" target="_blank" rel="noopener" class="btn btn-gold" style="padding:8px 18px;font-size:13px;">Open App ↗</a>
   </div>
 </nav>
 
@@ -1111,7 +1118,7 @@ footer {
   </p>
 
   <div class="hero-cta-row">
-    <a href="#launch" class="btn btn-gold btn-lg" onclick="/* wire up to PWA */">
+    <a href="https://johnlaz.github.io/forgeapp/app/index" target="_blank" rel="noopener" class="btn btn-gold btn-lg">
       ⚡ Launch App
     </a>
     <a href="#features" class="btn btn-ghost btn-lg">
@@ -1499,7 +1506,7 @@ footer {
         <p>LazForge stores everything in your browser's localStorage. No account, no server, no cloud sync. Your projects, logs, and parts lists belong to you — period. Export any time via print or AI Compile.</p>
       </div>
       <div class="callout-cta">
-        <a href="#launch" class="btn btn-gold btn-lg" onclick="/* wire up to PWA */">Open App</a>
+        <a href="https://johnlaz.github.io/forgeapp/app/index" target="_blank" rel="noopener" class="btn btn-gold btn-lg">Open App</a>
       </div>
     </div>
   </div>
@@ -1516,19 +1523,20 @@ footer {
     </p>
 
     <div class="install-btn-row">
-      <!-- Primary launch button — wire href to PWA path -->
-      <a href="#" class="btn btn-gold btn-lg" id="btn-launch-main" onclick="/* wire up to PWA — replace href with app URL */">
+      <a href="https://johnlaz.github.io/forgeapp/app/index" target="_blank" rel="noopener" class="btn btn-gold btn-lg" id="btn-launch-main">
         ⚡ Launch LazForge
       </a>
-      <!-- Install PWA button — wire to beforeinstallprompt or instructions -->
-      <a href="#" class="btn btn-teal btn-lg" id="btn-install-pwa" onclick="/* trigger PWA install prompt */">
+      <a href="#" class="btn btn-teal btn-lg" id="btn-install-pwa">
         📲 Install as App
+      </a>
+      <a href="https://johnlaz.github.io/forgeapp/forged.apk" download="forged.apk" class="btn btn-apk btn-lg" id="btn-download-apk">
+        📦 Download APK
       </a>
     </div>
 
     <p class="install-note">
       Works in Chrome, Edge, and Safari · No account required ·
-      <a href="#">View on GitHub</a>
+      <a href="https://github.com/johnlaz/forgeapp" target="_blank" rel="noopener">View on GitHub</a>
     </p>
   </div>
 </section>
@@ -1546,30 +1554,37 @@ footer {
 
 <script>
 // ── PWA Install prompt intercept ──
+const PWA_URL = "https://johnlaz.github.io/forgeapp/app/index";
 let deferredPrompt = null;
 
+// Capture the install prompt before it fires
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  document.getElementById('btn-install-pwa').style.display = 'inline-flex';
 });
 
+// "Install as App" button — fires native install prompt, or navigates to PWA
+// so the user can install from the browser's own UI
 document.getElementById('btn-install-pwa').addEventListener('click', async (e) => {
   e.preventDefault();
   if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
+    if (outcome === 'accepted') {
+      window.open(PWA_URL, '_blank');
+    }
   } else {
-    // Fallback: show install instructions
-    alert('To install: open your browser menu → "Add to Home Screen" or "Install App".');
+    // Navigate to the PWA — browser shows its own install affordance in the address bar
+    window.open(PWA_URL, '_blank');
   }
 });
 
-// ── Wire launch buttons to PWA path ──
-// Replace '#' with the actual path to index.html once hosted
-// e.g.: document.querySelectorAll('#btn-launch-main, .nav-cta .btn-gold')
-//         .forEach(b => b.href = './index.html');
+// Track install completion
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  console.log('LazForge installed as PWA');
+});
 </script>
 
 </body>
