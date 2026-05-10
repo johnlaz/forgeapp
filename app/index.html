@@ -342,7 +342,8 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 
 /* AI COMPILE */
 .compile-output{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;font-size:13px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap;min-height:120px;max-height:420px;overflow-y:auto}
-.compile-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.compile-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.compile-actions .btn-generate{order:-1;margin-right:auto}
 
 /* PRINT SELECT */
 .print-list{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto}
@@ -796,7 +797,8 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
     <div class="onboard-body" id="onboardBody"></div>
     <div class="onboard-footer">
       <div class="onboard-dots" id="onboardDots"></div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="_closeOnboarding()" style="color:var(--text-muted);font-size:11px">Skip</button>
         <button class="btn btn-ghost btn-sm" id="onboardPrev" onclick="onboardPrev()" style="display:none">&#8592; Back</button>
         <button class="btn btn-primary btn-sm" id="onboardNext" onclick="onboardNext()">Next &#8594;</button>
       </div>
@@ -1092,10 +1094,10 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
     <div class="modal-body">
       <div class="compile-output" id="compileOutput">Hit "Generate" to compile this project into a clean summary.</div>
       <div class="compile-actions">
-        <button class="btn btn-ghost btn-sm" id="compileGenBtn" onclick="runCompile()">⚡ Generate</button>
+        <button class="btn btn-ghost btn-sm btn-generate" id="compileGenBtn" onclick="runCompile()">⚡ Generate</button>
         <button class="btn btn-ghost btn-sm" onclick="copyCompile()">📋 Copy</button>
-        <button class="btn btn-teal btn-sm" onclick="exportCompilePNG()">🖼 Save Card PNG</button>
-        <button class="btn btn-primary btn-sm" onclick="printCompile()">⎙ Print Summary</button>
+        <button class="btn btn-teal btn-sm" onclick="exportCompilePNG()">🖼 PNG Card</button>
+        <button class="btn btn-primary btn-sm" onclick="printCompile()">⎙ Print</button>
       </div>
     </div>
   </div>
@@ -3531,7 +3533,7 @@ const ONBOARD_STEPS = [
     icon: '🤖',
     title: 'AI Brainstorm & Summary',
     desc: 'Add a <strong>Groq API key</strong> in Settings to unlock AI. Use <strong>Brainstorm</strong> to think through problems, then "Forge to Log" to save the session. Use <strong>AI Summary</strong> to compile a full report — then print or export as a PNG card.',
-    tip: '<strong>Tip:</strong> Groq is free — get a key at console.groq.com and paste it in Settings.'
+    tip: '<strong>Tip:</strong> Groq is free — <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:underline">get your API key at console.groq.com</a> and paste it in Settings.'
   },
   {
     icon: '🔍',
