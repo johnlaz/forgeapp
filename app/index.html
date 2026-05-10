@@ -3291,38 +3291,6 @@ function exportCompilePNG() {
   // Shrink long text to fit SVG text elements
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  // Summary: first 3 real lines from AI output
-  const sumLines = text.split('\n')
-    .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('*'))
-    .slice(0,3).map(l => esc(l.replace(/^[-•]\s*/,'').trim().slice(0,70)));
-
-  // BOM mini cards (up to 4)
-  const bomSlice = p.bom.slice(0,4);
-  const cardW2 = Math.floor((W - 72 - bomSlice.length * 8) / Math.max(bomSlice.length,1));
-  const bomCardsSvg = bomSlice.map((b,i) => {
-    const cx = 36 + i*(cardW2+8);
-    const col = b.status==='Purchased' ? '#10b981' : '#94a3b8';
-    return `<g>
-      <rect x="${cx}" y="286" width="${cardW2}" height="54" rx="7" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.11)" stroke-width="1"/>
-      <text x="${cx+8}" y="302" font-size="8.5" fill="#94a3b8" font-family="Georgia,serif">${esc(b.item.slice(0,16))}</text>
-      <text x="${cx+8}" y="320" font-size="13" fill="#e2e8f0" font-family="Georgia,serif" font-weight="700">$${parseFloat(b.cost||0).toFixed(2)}</text>
-      <circle cx="${cx+8+6}" cy="332" r="4" fill="${col}" opacity="0.8"/>
-      <text x="${cx+8+14}" y="336" font-size="8" fill="${col}" font-family="sans-serif">${b.status}</text>
-    </g>`;
-  }).join('');
-
-  // Tags
-  let tagX = 36;
-  const tagsSvg = (p.tags||[]).slice(0,6).map(t => {
-    const tw = esc(t).length * 6.5 + 18;
-    const g = `<g>
-      <rect x="${tagX}" y="256" width="${tw}" height="18" rx="9" fill="rgba(139,92,246,0.18)" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
-      <text x="${tagX+9}" y="269" font-size="9" fill="#a78bfa" font-family="sans-serif" font-weight="600">#${esc(t)}</text>
-    </g>`;
-    tagX += tw + 7;
-    return g;
-  }).join('');
-
   // ── Image panel constants ──────────────────────────────
   const IMG_X = 580, IMG_Y = 80, IMG_W = 280, IMG_H = 280;
   const hasImg = !!(p.projectImage);
