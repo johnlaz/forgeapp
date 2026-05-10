@@ -2,12 +2,12 @@
   "name": "LazForge",
   "short_name": "LazForge",
   "description": "Project command center for repairs, builds, and restorations.",
-  "start_url": "/lazforge/",
-  "scope": "/lazforge/",
+  "start_url": "/forgeapp/app/",
+  "scope": "/forgeapp/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0c0f14",
-  "theme_color": "#0c0f14",
+  "background_color": "#0a0b0e",
+  "theme_color": "#0a0b0e",
   "categories": [
     "productivity",
     "utilities"
