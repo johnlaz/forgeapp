@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LazForge — Project Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0f14;
+  --surface: #131820;
+  --surface2: #1a2232;
+  --border: #1e2d42;
+  --gold: #c9a227;
+  --gold-light: #e8c060;
+  --gold-dim: rgba(201,162,39,.1);
+  --teal: #2dd4bf;
+  --teal-dim: rgba(45,212,191,.08);
+  --teal-border: rgba(45,212,191,.22);
+  --red: #ef4444;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --text: #e2e8f0;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
+  --font-d: 'Playfair Display', Georgia, serif;
+  --font-b: 'DM Sans', system-ui, sans-serif;
+  --r: 12px;
+  --r-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,.35);
+  --shadow-lg: 0 12px 48px rgba(0,0,0,.55);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-b);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── NOISE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: .4;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(12,15,20,.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2.5rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.nav-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-d);
+  font-weight: 700; font-size: 17px;
+  color: #0c0f14;
+  flex-shrink: 0;
+}
+
+.nav-title {
+  font-family: var(--font-d);
+  font-size: 17px;
+  color: var(--text);
+  letter-spacing: .3px;
+}
+
+.nav-version {
+  font-size: 9px;
+  letter-spacing: .8px;
+  color: var(--gold-light);
+  text-shadow: 0 0 8px rgba(201,162,39,.7);
+  font-weight: 700;
+  animation: vGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes vGlow {
+  0%,100% { text-shadow: 0 0 6px rgba(201,162,39,.6), 0 0 12px rgba(201,162,39,.3); }
+  50%      { text-shadow: 0 0 12px rgba(232,192,96,.9), 0 0 24px rgba(201,162,39,.5); }
+}
+
+.nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  border-radius: var(--r-sm);
+  font-family: var(--font-b);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background .2s;
+}
+
+.btn:hover::after { background: rgba(255,255,255,.06); }
+
+.btn-gold {
+  background: var(--gold);
+  color: #0c0f14;
+  font-weight: 600;
+}
+.btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,162,39,.3); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: rgba(201,162,39,.4); }
+
+.btn-teal {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border: 1px solid var(--teal-border);
+}
+.btn-teal:hover { background: rgba(45,212,191,.15); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,212,191,.15); }
+
+.btn-lg {
+  padding: 14px 32px;
+  font-size: 15px;
+  font-family: var(--font-d);
+  font-weight: 600;
+  letter-spacing: .4px;
+  border-radius: var(--r);
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 2rem 6rem;
+  overflow: hidden;
+}
+
+/* radial glow backgrounds */
+.hero::after {
+  content: '';
+  position: absolute;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(201,162,39,.07) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -55%);
+  pointer-events: none;
+}
+
+.hero-glow-teal {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(45,212,191,.06) 0%, transparent 70%);
+  bottom: -100px; right: -100px;
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 99px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,162,39,.25);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 2rem;
+  animation: fadeUp .5s .1s both ease;
+}
+
+.hero-eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: pulse .9s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+
+.hero-title {
+  font-family: var(--font-d);
+  font-size: clamp(44px, 7vw, 80px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.5px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp .55s .2s both ease;
+}
+
+.hero-title-main {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.hero-title-sub {
+  color: var(--text);
+  display: block;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 0.65em;
+  opacity: .75;
+  margin-top: .2em;
+}
+
+.hero-desc {
+  max-width: 560px;
+  font-size: 17px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  animation: fadeUp .55s .3s both ease;
+}
+
+.hero-desc strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.hero-cta-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3.5rem;
+  animation: fadeUp .55s .4s both ease;
+}
+
+.hero-badges {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeUp .55s .5s both ease;
+}
+
+.hero-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.hero-badge-icon { font-size: 16px; }
+
+/* ── MOCK APP PREVIEW ── */
+.preview-wrap {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 4rem 2rem 0;
+  animation: fadeUp .6s .55s both ease;
+}
+
+.preview-label {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.mock-app {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(201,162,39,.08);
+  position: relative;
+}
+
+.mock-topbar {
+  background: linear-gradient(135deg, #0c0f14, #131a26);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mock-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mock-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-d);
+  font-size: 13px;
+  font-weight: 700;
+  color: #0c0f14;
+}
+
+.mock-title {
+  font-family: var(--font-d);
+  font-size: 14px;
+  color: var(--text);
+}
+
+.mock-api-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(16,185,129,.06);
+  border: 1px solid rgba(16,185,129,.25);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.mock-api-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.mock-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  display: flex;
+  gap: 0;
+}
+
+.mock-nav-tab {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.mock-nav-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.mock-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mock-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.mock-search {
+  width: 180px;
+  height: 30px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.mock-toolbar-right {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.mock-sort {
+  height: 28px;
+  padding: 0 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Project cards in preview */
+.mock-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.mock-card.active { border-color: rgba(201,162,39,.3); }
+
+.mock-card-head {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.015);
+}
+
+.mock-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.mb-repair  { background: rgba(245,158,11,.12); color: var(--amber); border: 1px solid rgba(245,158,11,.25); }
+.mb-restore { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-border); }
+.mb-build   { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,162,39,.3); }
+.mb-soft    { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.25); }
+
+.mock-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mock-status {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.ms-active    { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.25); }
+.ms-hold      { background: rgba(100,116,139,.12); color: var(--text-dim); border: 1px solid rgba(100,116,139,.25); }
+.ms-done      { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-border); }
+
+.mock-card-body {
+  padding: 10px 16px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border);
+}
+
+.mock-mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mock-mini-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--text-muted);
+}
+
+.mock-mini-val {
+  font-family: var(--font-d);
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.mock-mini-val.teal { color: var(--teal); }
+
+.mock-stage-pills {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.mock-sp {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.msp-blue   { background: rgba(59,130,246,.12); color: var(--blue); border: 1px solid rgba(59,130,246,.25); }
+.msp-amber  { background: rgba(245,158,11,.12); color: var(--amber); border: 1px solid rgba(245,158,11,.25); }
+.msp-purple { background: rgba(139,92,246,.12); color: var(--purple); border: 1px solid rgba(139,92,246,.25); }
+.msp-green  { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.25); }
+
+.mock-bom-row {
+  font-size: 11px;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(30,45,66,.5);
+  padding: 8px 16px;
+  display: flex;
+  gap: 16px;
+}
+
+.mock-bom-row span { color: var(--text-dim); }
+.mock-bom-row strong { color: var(--gold); }
+
+/* ── SECTION LAYOUT ── */
+section {
+  position: relative;
+  z-index: 1;
+}
+
+.section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 1rem;
+}
+
+.section-eyebrow-line {
+  width: 28px;
+  height: 1px;
+  background: var(--teal);
+  opacity: .5;
+}
+
+.section-title {
+  font-family: var(--font-d);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1rem;
+  line-height: 1.15;
+}
+
+.section-desc {
+  font-size: 16px;
+  color: var(--text-dim);
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.feat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  transition: all .2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--gold-dim), transparent);
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.feat-card:hover {
+  border-color: rgba(201,162,39,.3);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.feat-card:hover::before { opacity: 1; }
+
+.feat-card.teal::before {
+  background: linear-gradient(135deg, var(--teal-dim), transparent);
+}
+
+.feat-card.teal:hover { border-color: rgba(45,212,191,.3); }
+
+.feat-icon {
+  font-size: 28px;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.feat-title {
+  font-family: var(--font-d);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: .5rem;
+}
+
+.feat-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.feat-tag {
+  display: inline-block;
+  margin-top: .75rem;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--gold);
+  opacity: .7;
+}
+
+.feat-card.teal .feat-tag { color: var(--teal); }
+
+/* ── TEMPLATES ── */
+.templates-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.templates-grid {
+  display: flex;
+  gap: 10px;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.tpl-card {
+  flex: 1;
+  min-width: 140px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 1.25rem;
+  text-align: center;
+  transition: all .2s;
+}
+
+.tpl-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.tpl-icon { font-size: 26px; margin-bottom: .75rem; display: block; }
+.tpl-name { font-family: var(--font-d); font-size: 15px; font-weight: 600; margin-bottom: .25rem; }
+.tpl-hint { font-size: 11px; color: var(--text-muted); }
+
+.tpl-repair  .tpl-badge { background: rgba(245,158,11,.12); color: var(--amber); border: 1px solid rgba(245,158,11,.25); }
+.tpl-restore .tpl-badge { background: var(--teal-dim); color: var(--teal); border: var(--teal-border); }
+.tpl-build   .tpl-badge { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,162,39,.3); }
+.tpl-soft    .tpl-badge { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.25); }
+.tpl-hard    .tpl-badge { background: rgba(239,68,68,.08); color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+.tpl-other   .tpl-badge { background: rgba(139,92,246,.1); color: #a78bfa; border: 1px solid rgba(139,92,246,.25); }
+
+.tpl-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-bottom: .5rem;
+}
+
+/* ── HOW IT WORKS ── */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+  position: relative;
+}
+
+.step {
+  position: relative;
+}
+
+.step-num {
+  font-family: var(--font-d);
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: .5rem;
+}
+
+.step-title {
+  font-family: var(--font-d);
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: .5rem;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.step-accent {
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin-bottom: 1rem;
+}
+
+/* ── AI SECTION ── */
+.ai-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-section::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(45,212,191,.05) 0%, transparent 70%);
+  left: -100px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  margin-top: 3rem;
+}
+
+@media (max-width: 720px) {
+  .ai-grid { grid-template-columns: 1fr; }
+}
+
+.ai-mock-chat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.ai-chat-header {
+  background: rgba(45,212,191,.04);
+  border-bottom: 1px solid rgba(45,212,191,.15);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+}
+
+.ai-chat-dot {
+  width: 7px; height: 7px;
+  background: var(--teal);
+  border-radius: 50%;
+  animation: pulse .9s ease-in-out infinite;
+}
+
+.ai-chat-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 9px 13px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.cb-user {
+  align-self: flex-end;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,162,39,.2);
+  color: var(--text);
+}
+
+.cb-ai {
+  align-self: flex-start;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  color: var(--text);
+}
+
+.cb-ai strong { color: var(--teal); }
+
+.ai-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ai-feat {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.ai-feat-icon {
+  width: 36px; height: 36px;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.ai-feat-text h4 {
+  font-family: var(--font-d);
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.ai-feat-text p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+/* ── LOCAL FIRST CALLOUT ── */
+.callout {
+  background: linear-gradient(135deg, var(--surface), var(--surface2));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 3rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .callout { grid-template-columns: 1fr; }
+  .callout-cta { flex-direction: column; }
+}
+
+.callout-left h3 {
+  font-family: var(--font-d);
+  font-size: 26px;
+  color: var(--text);
+  margin-bottom: .75rem;
+}
+
+.callout-left p {
+  font-size: 14px;
+  color: var(--text-dim);
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.callout-cta {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── INSTALL SECTION ── */
+.install-section {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.install-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+.install-title {
+  font-family: var(--font-d);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.install-title-gradient {
+  background: linear-gradient(135deg, var(--gold-light), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.install-desc {
+  font-size: 16px;
+  color: var(--text-dim);
+  max-width: 480px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
+.install-btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.install-note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.install-note a {
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── FOOTER ── */
+footer {
+  padding: 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-d);
+  font-weight: 700;
+  font-size: 13px;
+  color: #0c0f14;
+}
+
+.footer-name {
+  font-family: var(--font-d);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.footer-copy {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  nav { padding: 0 1.25rem; }
+  .nav-title { display: none; }
+  .section-inner { padding: 4rem 1.25rem; }
+  .mock-card-body { display: none; }
+  .features-grid { grid-template-columns: 1fr; }
+  .templates-grid { flex-direction: column; }
+  .callout { padding: 1.75rem; }
+  .install-btn-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-mark">L</div>
+    <div>
+      <div class="nav-title">LazForge <span class="nav-version">v2.0</span></div>
+    </div>
+  </a>
+  <div class="nav-cta">
+    <a href="#features" class="btn btn-ghost" style="padding:8px 16px;font-size:13px;">Features</a>
+    <a href="#launch" class="btn btn-gold" style="padding:8px 18px;font-size:13px;" onclick="/* wire up to PWA */">Open App ↗</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-glow-teal"></div>
+
+  <div class="hero-eyebrow">
+    <div class="hero-eyebrow-dot"></div>
+    Local-first · AI-Powered · Offline-Ready
+  </div>
+
+  <h1 class="hero-title">
+    <span class="hero-title-main">LazForge</span>
+    <span class="hero-title-sub">Project Command Center</span>
+  </h1>
+
+  <p class="hero-desc">
+    A <strong>dark-luxury</strong> project management PWA built for repairs, builds, and restorations. Every project lives locally on your device — with AI brainstorming, bill-of-materials tracking, and a full forge log.
+  </p>
+
+  <div class="hero-cta-row">
+    <a href="#launch" class="btn btn-gold btn-lg" onclick="/* wire up to PWA */">
+      ⚡ Launch App
+    </a>
+    <a href="#features" class="btn btn-ghost btn-lg">
+      See Features
+    </a>
+  </div>
+
+  <div class="hero-badges">
+    <span class="hero-badge"><span class="hero-badge-icon">🔒</span> 100% Local Storage</span>
+    <span class="hero-badge"><span class="hero-badge-icon">📴</span> Works Offline</span>
+    <span class="hero-badge"><span class="hero-badge-icon">📦</span> Installable PWA</span>
+    <span class="hero-badge"><span class="hero-badge-icon">🤖</span> Groq AI Built-in</span>
+  </div>
+</section>
+
+<!-- ── APP PREVIEW ── -->
+<section style="position:relative;z-index:1;padding-bottom:5rem;">
+  <div class="preview-wrap">
+    <p class="preview-label">↓ Live Preview</p>
+    <div class="mock-app">
+
+      <div class="mock-topbar">
+        <div class="mock-logo-area">
+          <div class="mock-mark">L</div>
+          <span class="mock-title">LazForge <span style="font-size:9px;color:var(--gold-light);letter-spacing:.7px;">v2.0</span></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div class="mock-api-pill">
+            <div class="mock-api-dot"></div>
+            Groq — Ready
+          </div>
+          <div style="width:28px;height:28px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted);">⚙</div>
+        </div>
+      </div>
+
+      <div class="mock-nav">
+        <div class="mock-nav-tab active">Projects</div>
+        <div class="mock-nav-tab">Forge Log</div>
+        <div class="mock-nav-tab">BOM Overview</div>
+        <div class="mock-nav-tab">AI Compile</div>
+        <div class="mock-nav-tab" style="color:var(--teal);">Brainstorm</div>
+      </div>
+
+      <div class="mock-body">
+
+        <div class="mock-toolbar">
+          <div class="mock-search">🔍 <span>Search projects…</span></div>
+          <div class="mock-toolbar-right">
+            <div class="mock-sort">Sort: Recent ▾</div>
+            <div style="width:28px;height:28px;background:var(--gold-dim);border:1px solid rgba(201,162,39,.3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);">⊞</div>
+          </div>
+        </div>
+
+        <!-- Card 1 -->
+        <div class="mock-card active">
+          <div class="mock-card-head">
+            <div class="mock-badge mb-repair">Repair</div>
+            <div class="mock-card-name">Bosch Microwave HMB57152UC</div>
+            <div class="mock-status ms-active">Active</div>
+          </div>
+          <div class="mock-card-body">
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Invested</div>
+              <div class="mock-mini-val">$47.50</div>
+            </div>
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Budget</div>
+              <div class="mock-mini-val" style="color:var(--text-dim);">$120</div>
+            </div>
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Stage</div>
+              <div class="mock-stage-pills">
+                <div class="mock-sp msp-blue">Diagnose</div>
+                <div class="mock-sp msp-amber">Sourcing</div>
+              </div>
+            </div>
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Tags</div>
+              <div style="font-size:10px;color:#a78bfa;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);padding:2px 8px;border-radius:99px;">appliance</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="mock-card">
+          <div class="mock-card-head">
+            <div class="mock-badge mb-restore">Restore</div>
+            <div class="mock-card-name">1972 Schwinn Varsity Bicycle</div>
+            <div class="mock-status ms-active">Active</div>
+          </div>
+          <div class="mock-card-body">
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Invested</div>
+              <div class="mock-mini-val">$212.00</div>
+            </div>
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Budget</div>
+              <div class="mock-mini-val" style="color:var(--text-dim);">$350</div>
+            </div>
+            <div class="mock-mini-stat">
+              <div class="mock-mini-label">Stage</div>
+              <div class="mock-stage-pills">
+                <div class="mock-sp msp-purple">Refinish</div>
+                <div class="mock-sp msp-green">Done ✓</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="mock-card">
+          <div class="mock-card-head">
+            <div class="mock-badge mb-soft">Software</div>
+            <div class="mock-card-name">LazForge v2.0 — PWA Build</div>
+            <div class="mock-status ms-done">Completed</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      Everything you need
+    </div>
+    <h2 class="section-title">Built for the serious maker</h2>
+    <p class="section-desc">Every feature designed around real project workflows — from first diagnosis through final verification.</p>
+
+    <div class="features-grid">
+
+      <div class="feat-card">
+        <span class="feat-icon">🗂</span>
+        <div class="feat-title">Project Cards</div>
+        <p class="feat-desc">Stack or grid view for all your projects. Expand any card to reveal the full forge log, BOM, vault links, stage tracker, scratch pad, and AI tools.</p>
+        <span class="feat-tag">Core</span>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">📋</span>
+        <div class="feat-title">Forge Log</div>
+        <p class="feat-desc">Timestamped activity log with manual entries and AI-generated summaries. Collapsible, labeled, and fully searchable across your project history.</p>
+        <span class="feat-tag">Logging</span>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">💰</span>
+        <div class="feat-title">Bill of Materials</div>
+        <p class="feat-desc">Add parts with quantities, unit costs, budgets, and needed/purchased status. Live totals show invested vs. budgeted with over/under color coding.</p>
+        <span class="feat-tag">Finance</span>
+      </div>
+
+      <div class="feat-card teal">
+        <span class="feat-icon">🤖</span>
+        <div class="feat-title">AI Brainstorm</div>
+        <p class="feat-desc">Per-project chat powered by Groq. The AI knows your project's full context — template, stages, BOM, and log — for targeted advice and ideas.</p>
+        <span class="feat-tag">AI · Groq</span>
+      </div>
+
+      <div class="feat-card teal">
+        <span class="feat-icon">📄</span>
+        <div class="feat-title">AI Compile</div>
+        <p class="feat-desc">Generate a complete narrative project summary with one click. Copy to clipboard or open a clean print-ready window for any project or all at once.</p>
+        <span class="feat-tag">AI · Export</span>
+      </div>
+
+      <div class="feat-card teal">
+        <span class="feat-icon">🔍</span>
+        <div class="feat-title">Receipt Scanner</div>
+        <p class="feat-desc">Drop an image or paste text from a receipt. AI extracts BOM items automatically and presents them for one-click insertion into your parts list.</p>
+        <span class="feat-tag">AI · Import</span>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">🏁</span>
+        <div class="feat-title">Stage Tracker</div>
+        <p class="feat-desc">Color-coded stage pills pre-loaded per template type: blue for planning, amber for sourcing, purple for implementation, green for done.</p>
+        <span class="feat-tag">Workflow</span>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">🔗</span>
+        <div class="feat-title">PDF Vault</div>
+        <p class="feat-desc">Link manuals, schematics, and reference documents via GitHub URLs. Vault items open directly — no file uploads, no bloat, totally portable.</p>
+        <span class="feat-tag">Reference</span>
+      </div>
+
+      <div class="feat-card">
+        <span class="feat-icon">🖨</span>
+        <div class="feat-title">Selective Print</div>
+        <p class="feat-desc">Choose exactly which projects to print with a checkbox modal. Clean print-optimized CSS strips all chrome — output looks like a proper report.</p>
+        <span class="feat-tag">Export</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── TEMPLATES ── -->
+<section class="templates-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      Project Types
+    </div>
+    <h2 class="section-title">Six templates, one command center</h2>
+    <p class="section-desc">Each template pre-loads the right stage labels for that type of work. Switch template any time.</p>
+
+    <div class="templates-grid">
+
+      <div class="tpl-card tpl-repair">
+        <span class="tpl-icon">🔧</span>
+        <div class="tpl-badge">Repair</div>
+        <div class="tpl-name">Repair</div>
+        <div class="tpl-hint">Diagnose → Disassemble → Source → Fix → Test</div>
+      </div>
+
+      <div class="tpl-card tpl-restore">
+        <span class="tpl-icon">✨</span>
+        <div class="tpl-badge">Restore</div>
+        <div class="tpl-name">Restore</div>
+        <div class="tpl-hint">Assess → Strip → Repair → Refinish → Verify</div>
+      </div>
+
+      <div class="tpl-card tpl-build">
+        <span class="tpl-icon">🏗</span>
+        <div class="tpl-badge">Build</div>
+        <div class="tpl-name">Build</div>
+        <div class="tpl-hint">Plan → Design → Source → Assemble → Test</div>
+      </div>
+
+      <div class="tpl-card tpl-soft">
+        <span class="tpl-icon">💻</span>
+        <div class="tpl-badge">Software</div>
+        <div class="tpl-name">Software</div>
+        <div class="tpl-hint">Blueprint → Dev → Test → Deploy → Monitor</div>
+      </div>
+
+      <div class="tpl-card tpl-hard">
+        <span class="tpl-icon">🔌</span>
+        <div class="tpl-badge">Hardware</div>
+        <div class="tpl-name">Hardware</div>
+        <div class="tpl-hint">Spec → Prototype → Source → Assemble → QA</div>
+      </div>
+
+      <div class="tpl-card tpl-other">
+        <span class="tpl-icon">📁</span>
+        <div class="tpl-badge">Other</div>
+        <div class="tpl-name">Other</div>
+        <div class="tpl-hint">Flexible stages for any project type</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── AI SECTION ── -->
+<section class="ai-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      AI-Powered
+    </div>
+    <h2 class="section-title">Groq intelligence, woven in</h2>
+
+    <div class="ai-grid">
+
+      <div class="ai-mock-chat">
+        <div class="ai-chat-header">
+          <div class="ai-chat-dot"></div>
+          Brainstorm — Bosch Microwave Repair
+        </div>
+        <div class="ai-chat-body">
+          <div class="chat-bubble cb-user">
+            The magnetron tests fine on continuity. What else could cause no heating?
+          </div>
+          <div class="chat-bubble cb-ai">
+            Given your BOM shows the magnetron is ruled out, the next suspects are the <strong>high-voltage diode</strong> and <strong>capacitor</strong>. The diode commonly fails open or short — test with your multimeter on the diode setting. The capacitor holds lethal charge even unplugged; discharge it through a 10kΩ resistor before touching. Also check the <strong>thermal cutout fuse</strong> on the magnetron — these pop silently.
+          </div>
+          <div class="chat-bubble cb-user">
+            How do I safely discharge the cap?
+          </div>
+          <div class="chat-bubble cb-ai">
+            Use a <strong>10kΩ, 5W resistor</strong> bridged across both capacitor terminals with insulated probes. Hold for 10 seconds. The resistor limits inrush current so you don't get a violent arc. Verify with your meter at the &lt;2V setting afterward. Adding this to your log as a safety step is a good idea.
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-features-list">
+
+        <div class="ai-feat">
+          <div class="ai-feat-icon">🧠</div>
+          <div class="ai-feat-text">
+            <h4>Context-aware chat</h4>
+            <p>Every brainstorm session includes your project's template, active stage, BOM items, and forge log as context — so advice is always relevant to where you actually are.</p>
+          </div>
+        </div>
+
+        <div class="ai-feat">
+          <div class="ai-feat-icon">📝</div>
+          <div class="ai-feat-text">
+            <h4>Log to project</h4>
+            <p>Send any AI response directly to your forge log as a timestamped AI entry. No copy-paste — one click and it's archived.</p>
+          </div>
+        </div>
+
+        <div class="ai-feat">
+          <div class="ai-feat-icon">🧾</div>
+          <div class="ai-feat-text">
+            <h4>Receipt → BOM</h4>
+            <p>Drop a receipt image or paste the text. AI extracts parts, quantities, and prices and presents them for insertion into your bill of materials.</p>
+          </div>
+        </div>
+
+        <div class="ai-feat">
+          <div class="ai-feat-icon">📰</div>
+          <div class="ai-feat-text">
+            <h4>Compile & export</h4>
+            <p>Generate a full narrative project report from your log, BOM, stages, and notes. Print it or copy it anywhere.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── HOW IT WORKS ── -->
+<section>
+  <div class="section-inner">
+    <div class="section-eyebrow">
+      <div class="section-eyebrow-line"></div>
+      Getting Started
+    </div>
+    <h2 class="section-title">Up and running in 60 seconds</h2>
+
+    <div class="steps-grid">
+
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-accent"></div>
+        <div class="step-title">Open the app</div>
+        <p class="step-desc">Launch LazForge in any modern browser. A sample project is pre-loaded on first visit so you can explore immediately.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-accent"></div>
+        <div class="step-title">Add your key</div>
+        <p class="step-desc">Paste your free Groq API key in Settings. That's the only credential needed — everything else is local.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-accent"></div>
+        <div class="step-title">Create a project</div>
+        <p class="step-desc">Pick a template, give it a name, and start logging. Add BOM items, link manuals to the vault, and track stages.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-accent"></div>
+        <div class="step-title">Install as PWA</div>
+        <p class="step-desc">Hit "Add to Home Screen" from your browser to install LazForge as a native app. Works offline, no app store needed.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── LOCAL FIRST CALLOUT ── -->
+<section>
+  <div class="section-inner" style="padding-top:0;">
+    <div class="callout">
+      <div class="callout-left">
+        <h3>🔒 Your data never leaves your device</h3>
+        <p>LazForge stores everything in your browser's localStorage. No account, no server, no cloud sync. Your projects, logs, and parts lists belong to you — period. Export any time via print or AI Compile.</p>
+      </div>
+      <div class="callout-cta">
+        <a href="#launch" class="btn btn-gold btn-lg" onclick="/* wire up to PWA */">Open App</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INSTALL / LAUNCH ── -->
+<section class="install-section" id="launch">
+  <div class="install-inner">
+    <h2 class="install-title">
+      Ready to <span class="install-title-gradient">forge something?</span>
+    </h2>
+    <p class="install-desc">
+      Open LazForge in your browser and install it as a PWA for the full offline-capable, home-screen experience.
+    </p>
+
+    <div class="install-btn-row">
+      <!-- Primary launch button — wire href to PWA path -->
+      <a href="#" class="btn btn-gold btn-lg" id="btn-launch-main" onclick="/* wire up to PWA — replace href with app URL */">
+        ⚡ Launch LazForge
+      </a>
+      <!-- Install PWA button — wire to beforeinstallprompt or instructions -->
+      <a href="#" class="btn btn-teal btn-lg" id="btn-install-pwa" onclick="/* trigger PWA install prompt */">
+        📲 Install as App
+      </a>
+    </div>
+
+    <p class="install-note">
+      Works in Chrome, Edge, and Safari · No account required ·
+      <a href="#">View on GitHub</a>
+    </p>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="footer-mark">L</div>
+      <span class="footer-name">LazForge v2.0</span>
+    </div>
+    <span class="footer-copy">Project Command Center · Local-first · AI-Powered</span>
+  </div>
+</footer>
+
+<script>
+// ── PWA Install prompt intercept ──
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('btn-install-pwa').style.display = 'inline-flex';
+});
+
+document.getElementById('btn-install-pwa').addEventListener('click', async (e) => {
+  e.preventDefault();
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  } else {
+    // Fallback: show install instructions
+    alert('To install: open your browser menu → "Add to Home Screen" or "Install App".');
+  }
+});
+
+// ── Wire launch buttons to PWA path ──
+// Replace '#' with the actual path to index.html once hosted
+// e.g.: document.querySelectorAll('#btn-launch-main, .nav-cta .btn-gold')
+//         .forEach(b => b.href = './index.html');
+</script>
+
+</body>
+</html>
