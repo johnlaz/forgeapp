@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LazForge v2.0 — Project Command</title>
 <meta name="theme-color" content="#0c0f14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,8 +41,9 @@ body.light-mode .app-header{background:linear-gradient(135deg,#2a1e12,#1a1612)!i
 body.light-mode .nav-bar{background:#f5f1eb}
 body.light-mode .project-card,body.light-mode .compact-card{background:var(--surface)}
 body.light-mode .bom-table th{background:rgba(185,145,31,.12)!important;color:#7a5c10!important}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overscroll-behavior-y:none}
+button,.btn,.bom-status-pill,.nav-tab,.card-toggle,.card-tab{touch-action:manipulation}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
 /* SPLASH */
@@ -62,7 +63,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
 /* HEADER */
-.app-header{background:linear-gradient(135deg,#0c0f14,#131a26);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:200}
+.app-header{background:linear-gradient(135deg,#0c0f14,#131a26);border-bottom:1px solid var(--border);padding:0 2rem;padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:space-between;height:calc(64px + env(safe-area-inset-top));position:sticky;top:0;z-index:200}
 .logo{display:flex;align-items:center;gap:12px}
 .logo-mark{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold-light));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-weight:700;font-size:17px;color:#0c0f14;flex-shrink:0}
 .logo-text{font-family:var(--font-d);font-size:17px;color:var(--text);letter-spacing:.3px}
@@ -90,6 +91,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-sm);font-family:var(--font-b);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.btn:active{transform:scale(.96)}
 .btn-primary{background:var(--gold);color:#0c0f14}.btn-primary:hover{background:var(--gold-light)}
 .btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:rgba(201,162,39,.4)}
 .btn-teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}.btn-teal:hover{background:rgba(45,212,191,.18)}
@@ -310,10 +312,27 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 .modal-header{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between}
 .modal-title{font-family:var(--font-d);font-size:19px;color:var(--text);margin-bottom:2px}
 .modal-sub{font-size:12px;color:var(--text-muted)}
-.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:2px 4px;line-height:1;transition:color .15s}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;padding:2px 4px;line-height:1;transition:color .15s,transform .15s;touch-action:manipulation}
+.modal-close:active{transform:scale(.9)}
 .modal-close:hover{color:var(--text)}
 .modal-body{padding:20px 24px}
 .modal-footer{padding:14px 24px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border)}
+
+/* CONFIRM DIALOG — themed replacement for native browser confirm() */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));opacity:0;pointer-events:none;transition:opacity .18s ease}
+.confirm-overlay.open{opacity:1;pointer-events:auto}
+.confirm-sheet{background:var(--surface2);border:1px solid var(--border);border-radius:18px;width:100%;max-width:300px;overflow:hidden;box-shadow:var(--shadow-lg);text-align:center;transform:scale(.82);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.confirm-overlay.open .confirm-sheet{transform:scale(1)}
+.confirm-body{padding:22px 20px 18px}
+.confirm-title{font-family:var(--font-d);font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px}
+.confirm-msg{font-size:13px;color:var(--text-dim);line-height:1.5}
+.confirm-actions{display:flex;border-top:1px solid var(--border)}
+.confirm-btn{flex:1;padding:14px 10px;background:none;border:none;font-family:var(--font-b);font-size:15px;font-weight:500;color:var(--teal);cursor:pointer;transition:background .15s;touch-action:manipulation}
+.confirm-btn:active{background:rgba(255,255,255,.07)}
+.confirm-btn+.confirm-btn{border-left:1px solid var(--border)}
+.confirm-btn.confirm-cancel{color:var(--text-dim);font-weight:400}
+.confirm-btn.confirm-danger{color:var(--red);font-weight:600}
+.confirm-btn.confirm-primary{color:var(--gold-light);font-weight:600}
 
 /* AI SCAN */
 .scan-divider{display:flex;align-items:center;gap:12px;margin:16px 0}
@@ -341,7 +360,10 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 .forge-bar-label{flex:1;font-size:12px;color:var(--text-muted)}
 
 /* AI COMPILE */
-.compile-output{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;font-size:13px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap;min-height:120px;max-height:420px;overflow-y:auto}
+.compile-output{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;font-size:13px;color:var(--text-dim);line-height:1.8;white-space:pre-wrap;min-height:120px;max-height:420px;overflow-y:auto;font-family:var(--font-b);resize:vertical;transition:border-color .15s}
+.compile-output:focus{outline:none;border-color:var(--gold);color:var(--text)}
+.compile-refine-row{display:flex;gap:8px;margin-top:10px}
+.compile-hint{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5}
 .compile-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
 .compile-actions .btn-generate{order:-1;margin-right:auto}
 
@@ -389,7 +411,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 .scan-paste-status.ready{color:var(--green)}
 
 /* TOAST */
-.toast-wrap{position:fixed;bottom:1.75rem;right:1.75rem;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast-wrap{position:fixed;bottom:calc(1.75rem + env(safe-area-inset-bottom));right:1.75rem;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;color:var(--text);display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);animation:toastIn .25s ease;min-width:220px}
 .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--teal)}
 @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
@@ -611,10 +633,13 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 
   /* ── TOAST ── */
   .toast-wrap{
-    bottom:1rem;right:.75rem;left:.75rem;
+    bottom:calc(1rem + env(safe-area-inset-bottom));right:.75rem;left:.75rem;
     align-items:stretch;
   }
   .toast{min-width:unset;width:100%}
+
+  /* ── AI COMPILE ── */
+  .compile-refine-row{flex-direction:column}
 
   /* ── SCRATCH PAD ── */
   .scratch-save-row{flex-direction:column;align-items:flex-end;gap:6px}
@@ -714,9 +739,10 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
         </div>
         <div class="settings-group-label" style="padding-top:0">Model</div>
         <select class="menu-select" id="groqModelSelect">
-          <option value="llama-3.3-70b-versatile">Llama 3.3 70B (recommended)</option>
+          <option value="qwen/qwen3.6-27b">Qwen 3.6 27B (recommended)</option>
+          <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+          <option value="openai/gpt-oss-120b">GPT-OSS 120B</option>
           <option value="llama-3.1-8b-instant">Llama 3.1 8B (fast)</option>
-          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
         </select>
         <div class="settings-divider"></div>
         <div class="settings-group-label">Data</div>
@@ -740,7 +766,7 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
           <span class="si-icon">🧭</span><div><div class="si-title">Getting Started Guide</div><div class="si-sub">Tour the key features</div></div>
         </button>
         <div class="settings-divider"></div>
-        <button class="settings-item danger" onclick="clearAllData();toggleSettings()">
+        <button class="settings-item danger" onclick="clearAllData()">
           <span class="si-icon">🗑</span><div><div class="si-title">Clear All Data</div><div class="si-sub">Permanently removes all projects</div></div>
         </button>
       </div>
@@ -1092,7 +1118,12 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
       <button class="modal-close" onclick="closeModal('compileModal')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="compile-output" id="compileOutput">Hit "Generate" to compile this project into a clean summary.</div>
+      <textarea class="compile-output" id="compileOutput" placeholder="Hit &quot;Generate&quot; to compile this project into a clean summary — or write your own here.">Hit "Generate" to compile this project into a clean summary.</textarea>
+      <div class="compile-refine-row">
+        <input type="text" class="menu-input" id="compileRefineInput" placeholder="Tell the AI how to reshape it — e.g. &quot;condense to 5 bullet points for a card&quot;">
+        <button class="btn btn-teal btn-sm" id="compileRefineBtn" onclick="runRefine()">🪄 Refine</button>
+      </div>
+      <div class="compile-hint">Edit the text above directly, or describe a change and refine it — either way, the PNG card and print report use exactly what's shown here.</div>
       <div class="compile-actions">
         <button class="btn btn-ghost btn-sm btn-generate" id="compileGenBtn" onclick="runCompile()">⚡ Generate</button>
         <button class="btn btn-ghost btn-sm" onclick="copyCompile()">📋 Copy</button>
@@ -1131,7 +1162,57 @@ body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height
 // DB
 // ═══════════════════════════════════════════════════════
 const DB_KEY = 'lazforge_db';
-let db = { projects:[], settings:{ groqKey:'', groqModel:'llama-3.3-70b-versatile' } };
+let db = { projects:[], settings:{ groqKey:'', groqModel:'qwen/qwen3.6-27b' } };
+
+// ── IMAGE STORE (IndexedDB) ─────────────────────────────
+// Project photos live here instead of localStorage. localStorage has a hard
+// ~5-10MB per-origin ceiling; IndexedDB gives us hundreds of MB, so imports
+// and photo uploads no longer risk blowing the quota.
+const IMG_DB_NAME = 'lazforge_images_db';
+const IMG_STORE = 'images';
+let _imgDBPromise = null;
+function openImageDB() {
+  if (_imgDBPromise) return _imgDBPromise;
+  _imgDBPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(IMG_DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const idb = req.result;
+      if (!idb.objectStoreNames.contains(IMG_STORE)) {
+        idb.createObjectStore(IMG_STORE, { keyPath:'projectId' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return _imgDBPromise;
+}
+async function idbPutImage(projectId, dataUrl, name) {
+  const idb = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(IMG_STORE, 'readwrite');
+    tx.objectStore(IMG_STORE).put({ projectId, dataUrl, name });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGetImage(projectId) {
+  const idb = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(IMG_STORE, 'readonly');
+    const req = tx.objectStore(IMG_STORE).get(projectId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbDeleteImage(projectId) {
+  const idb = await openImageDB();
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(IMG_STORE, 'readwrite');
+    tx.objectStore(IMG_STORE).delete(projectId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
 function loadDB() {
   try {
@@ -1140,10 +1221,49 @@ function loadDB() {
     if (!db.projects) db.projects = [];
     if (!db.settings) db.settings = {};
     db.settings.groqKey   = db.settings.groqKey   || '';
-    db.settings.groqModel = db.settings.groqModel || 'llama-3.3-70b-versatile';
+    db.settings.groqModel = db.settings.groqModel || 'qwen/qwen3.6-27b';
   } catch(e) {}
 }
-function saveDB() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+// Pulls project photos out of IndexedDB and back onto their in-memory
+// project objects. Called once at boot after loadDB(); safe to call again
+// any time (e.g. before export) since it skips projects already hydrated.
+async function hydrateImages() {
+  const needed = db.projects.filter(p => p.hasImage && !p.projectImage);
+  if (!needed.length) return false;
+  await Promise.all(needed.map(async p => {
+    try {
+      const rec = await idbGetImage(p.projectId);
+      if (rec) { p.projectImage = rec.dataUrl; p.projectImageName = rec.name; }
+    } catch(e) {}
+  }));
+  return true;
+}
+
+function saveDB() {
+  try {
+    // Strip image data URLs out of the localStorage payload — they live in
+    // IndexedDB instead. A boolean flag is enough to know to re-hydrate.
+    const slim = {
+      ...db,
+      projects: db.projects.map(p => {
+        if (p.projectImage) {
+          const { projectImage, projectImageName, ...rest } = p;
+          return { ...rest, hasImage:true };
+        }
+        return p;
+      })
+    };
+    localStorage.setItem(DB_KEY, JSON.stringify(slim));
+  } catch(err) {
+    if (err && (err.name === 'QuotaExceededError' || err.code === 22 || err.code === 1014)) {
+      const e2 = new Error('Storage quota exceeded even without images — your project text data itself is very large. Try removing or archiving older projects.');
+      e2.isQuotaError = true;
+      throw e2;
+    }
+    throw err;
+  }
+}
 function uuid() { return crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).slice(2); }
 
 // ═══════════════════════════════════════════════════════
@@ -1236,11 +1356,20 @@ async function callAI(userMsg, systemPrompt, history, test) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method:'POST',
     headers:{ 'Authorization':'Bearer '+key, 'Content-Type':'application/json' },
-    body:JSON.stringify({ model:db.settings.groqModel, max_tokens:test?10:2000, messages })
+    body:JSON.stringify({
+      model:db.settings.groqModel, max_tokens:test?10:2000, messages,
+      // Suppress Qwen3's visible chain-of-thought — we want the answer, not the scratchpad
+      reasoning_effort:'none'
+    })
   });
   const data = await res.json();
   if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
-  return data.choices?.[0]?.message?.content || '';
+  let text = data.choices?.[0]?.message?.content || '';
+  // Safety net: strip any <think>...</think> block that leaks through anyway
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // Also strip an unclosed "Thinking Process:" preamble some Qwen3 responses emit
+  text = text.replace(/^(Thinking Process:[\s\S]*?)(\n\n(?!\d+\.\s|\*\*|#))/i, '').trim();
+  return text;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1261,7 +1390,7 @@ function toggleSettings() {
   btn.classList.toggle('active', open);
   if (open) {
     document.getElementById('groqKeyInput').value    = db.settings.groqKey   || '';
-    document.getElementById('groqModelSelect').value = db.settings.groqModel || 'llama-3.3-70b-versatile';
+    document.getElementById('groqModelSelect').value = db.settings.groqModel || 'qwen/qwen3.6-27b';
   }
 }
 
@@ -1571,7 +1700,7 @@ function renderPanelImage(p, activeTab) {
     '<input type="file" accept="image/*" onchange="handleImgFile(event,\''+p.projectId+'\')" onclick="event.stopPropagation()">'+
     '<div class="proj-img-drop-icon">🖼</div>'+
     '<div class="proj-img-drop-label">'+(hasImg?'<strong>Replace image</strong> — drag or click':'<strong>Upload image</strong> — drag or click')+'</div>'+
-    '<div class="proj-img-drop-label" style="font-size:11px;margin-top:4px">JPG, PNG, WebP, GIF — stored as base64 in your project data</div>'+
+    '<div class="proj-img-drop-label" style="font-size:11px;margin-top:4px">JPG, PNG, WebP, GIF — stored in your browser\'s local database</div>'+
     '</div></div></div>';
 }
 
@@ -1595,19 +1724,26 @@ function loadProjectImage(file, pid) {
     const p = db.projects.find(x => x.projectId===pid); if (!p) return;
     p.projectImage = ev.target.result;
     p.projectImageName = file.name;
+    p.hasImage = true;
     p.lastActive = new Date().toISOString();
-    saveDB(); renderProjects();
-    if (expandedCards[pid]) expandedCards[pid] = 'image';
-    renderProjects();
-    toast('Image saved to project.','success');
+    idbPutImage(pid, p.projectImage, p.projectImageName).then(() => {
+      saveDB(); renderProjects();
+      if (expandedCards[pid]) expandedCards[pid] = 'image';
+      renderProjects();
+      toast('Image saved to project.','success');
+    }).catch(err => {
+      toast('Failed to save image: '+err.message,'error');
+    });
   };
   reader.readAsDataURL(file);
 }
 
-function removeProjectImage(pid) {
+async function removeProjectImage(pid) {
   const p = db.projects.find(x => x.projectId===pid); if (!p) return;
-  if (!confirm('Remove project image?')) return;
-  delete p.projectImage; delete p.projectImageName;
+  const ok = await showConfirm('This photo will be permanently removed from this project.', { title:'Remove Image?', confirmText:'Remove' });
+  if (!ok) return;
+  delete p.projectImage; delete p.projectImageName; delete p.hasImage;
+  idbDeleteImage(pid).catch(()=>{});
   saveDB(); renderProjects(); toast('Image removed.','info');
 }
 
@@ -1743,8 +1879,10 @@ function saveProjectEdit() {
   toast('Project updated.','success');
 }
 
-function deleteProject() {
-  if (!confirm('Delete this project and all its data?')) return;
+async function deleteProject() {
+  const ok = await showConfirm('This will permanently delete this project and all its logs, BOM items, and files. This cannot be undone.', { title:'Delete Project?', confirmText:'Delete' });
+  if (!ok) return;
+  idbDeleteImage(editingPid).catch(()=>{});
   db.projects = db.projects.filter(x => x.projectId!==editingPid);
   delete expandedCards[editingPid];
   saveDB(); closeModal('editProjectModal'); renderProjects();
@@ -1776,8 +1914,9 @@ function saveLogEntry() {
   toast('Log entry saved.','success');
 }
 
-function confirmDeleteLog(pid, idx) {
-  if (!confirm('Delete this log entry?')) return;
+async function confirmDeleteLog(pid, idx) {
+  const ok = await showConfirm('This log entry will be permanently removed.', { title:'Delete Log Entry?', confirmText:'Delete' });
+  if (!ok) return;
   const p = db.projects.find(x => x.projectId===pid);
   if (!p) return;
   const key = pid+'-'+idx;
@@ -2272,7 +2411,8 @@ function openCompile(pid){
   compilePid=pid;
   const p=db.projects.find(x=>x.projectId===pid);
   document.getElementById('compileSub').textContent=p?'Project: '+p.projectTitle:'';
-  document.getElementById('compileOutput').textContent='Hit "Generate" to compile this project into a clean summary.';
+  document.getElementById('compileOutput').value='Hit "Generate" to compile this project into a clean summary.';
+  document.getElementById('compileRefineInput').value='';
   document.getElementById('compileGenBtn').disabled=false;
   document.getElementById('compileGenBtn').textContent='⚡ Generate';
   openModal('compileModal');
@@ -2282,29 +2422,52 @@ async function runCompile(){
   const p=db.projects.find(x=>x.projectId===compilePid); if(!p)return;
   const btn=document.getElementById('compileGenBtn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Compiling…';
-  document.getElementById('compileOutput').textContent='Generating…';
+  document.getElementById('compileOutput').value='Generating…';
   const logText=p.forgeLog.map(l=>'['+( l.label||'Note')+'] '+l.summary+'\n'+l.content).join('\n\n---\n\n');
   const bomText=p.bom.map(b=>'- '+b.item+': $'+parseFloat(b.cost||0).toFixed(2)+' ('+b.status+')').join('\n');
   const prompt='You are a project documentation assistant. Generate a clean professional project summary.\n\nInclude: ## Project Overview, ## Current Stage & Status, ## Key Findings & Notes, ## Parts Needed, ## Parts Purchased, ## Total Investment, ## Recommended Next Steps\n\nBe concise. Use ## headings and bullet points.\n\nPROJECT: '+p.projectTitle+'\nCATEGORY: '+(p.customLabel||p.template)+'\nSTATUS: '+p.status+'\nSTAGE: '+(p.activeStage||'Not set')+'\nTAGS: '+(p.tags||[]).join(', ')+'\n\nLOG:\n'+(logText||'None')+'\n\nBOM:\n'+(bomText||'None')+'\n\nVAULT: '+p.vaultLinks.map(v=>v.name).join(', ')+(p.scratch?'\n\nNOTES: '+p.scratch:'');
   try{
     const result=await callAI(prompt,null,[]);
-    document.getElementById('compileOutput').textContent=result;
+    document.getElementById('compileOutput').value=result;
     updateLight('ok','Groq ✓');
   }catch(e){
-    document.getElementById('compileOutput').textContent='Error: '+e.message;
+    document.getElementById('compileOutput').value='Error: '+e.message;
     toast('Compile error: '+e.message.slice(0,80),'error');
   }
   btn.disabled=false; btn.textContent='⚡ Regenerate';
 }
 
+async function runRefine(){
+  const p=db.projects.find(x=>x.projectId===compilePid); if(!p)return;
+  const current=document.getElementById('compileOutput').value;
+  if(!current||current.startsWith('Hit "Generate"')||current==='Generating…'){
+    toast('Generate a summary first, then refine it.','error'); return;
+  }
+  const instruction=document.getElementById('compileRefineInput').value.trim();
+  if(!instruction){ toast('Tell the AI how you want it changed.','error'); return; }
+  const btn=document.getElementById('compileRefineBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Refining…';
+  const prompt='Here is an existing project summary:\n\n---\n'+current+'\n---\n\nRewrite it following this instruction: "'+instruction+'"\n\nKeep every fact accurate to the original — don\'t invent new information, just reshape/condense/reformat as instructed. Return only the revised summary text, no preamble or explanation.';
+  try{
+    const result=await callAI(prompt,null,[]);
+    document.getElementById('compileOutput').value=result;
+    document.getElementById('compileRefineInput').value='';
+    toast('Summary refined.','success');
+    updateLight('ok','Groq ✓');
+  }catch(e){
+    toast('Refine error: '+e.message.slice(0,80),'error');
+  }
+  btn.disabled=false; btn.innerHTML='🪄 Refine';
+}
+
 function copyCompile(){
-  const text=document.getElementById('compileOutput').textContent;
+  const text=document.getElementById('compileOutput').value;
   if(!text||text.startsWith('Hit "Generate"')){toast('Generate the summary first.','error');return;}
   navigator.clipboard.writeText(text).then(()=>toast('Summary copied to clipboard.','success'));
 }
 
 function printCompile(){
-  const text=document.getElementById('compileOutput').textContent;
+  const text=document.getElementById('compileOutput').value;
   if(!text||text.startsWith('Hit "Generate"')){toast('Generate the summary first.','error');return;}
   const p=db.projects.find(x=>x.projectId===compilePid);
   if(!p)return;
@@ -2942,8 +3105,13 @@ async function importFromScan() {
 // ═══════════════════════════════════════════════════════
 // EXPORT / IMPORT JSON + CSV
 // ═══════════════════════════════════════════════════════
-function exportJSON() {
-  const blob = new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+async function exportJSON() {
+  await hydrateImages(); // make sure every project's image is pulled in from IndexedDB
+  const exportData = {
+    ...db,
+    projects: db.projects.map(p => { const { hasImage, ...rest } = p; return rest; })
+  };
+  const blob = new Blob([JSON.stringify(exportData,null,2)],{type:'application/json'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='lazforge_backup.json'; a.click();
   toast('Backup exported.','success');
 }
@@ -2951,15 +3119,37 @@ function exportJSON() {
 function importJSON(e) {
   const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{
+  reader.onload=async ev=>{
     try{
       const imp=JSON.parse(ev.target.result);
       if(!imp.projects)throw new Error('Not a valid LazForge backup.');
-      if(!confirm('Import '+imp.projects.length+' projects? New ones will be merged in.'))return;
+      const existingCount = imp.projects.filter(p=>db.projects.some(x=>x.projectId===p.projectId)).length;
+      const newCount = imp.projects.length - existingCount;
+      const msg = existingCount
+        ? newCount+' new project'+(newCount!==1?'s':'')+' will be added. '+existingCount+' already in your library will be skipped — nothing gets overwritten.'
+        : newCount+' new project'+(newCount!==1?'s':'')+' will be added to your library.';
+      const ok = await showConfirm(msg, { title:'Import Backup?', confirmText:'Import', danger:false });
+      if (!ok) return;
       const existing=new Set(db.projects.map(p=>p.projectId));
-      let added=0;
-      imp.projects.forEach(p=>{ if(!existing.has(p.projectId)){ if(!p.tags)p.tags=[]; if(!p.scratch)p.scratch=''; if(!p.projectImage)p.projectImage=''; if(!p.projectImageName)p.projectImageName=''; db.projects.push(p); added++; } });
-      saveDB(); renderProjects(); toast('Imported '+added+' project'+(added!==1?'s':'')+'.','success');
+      const toAdd=[];
+      imp.projects.forEach(p=>{ if(!existing.has(p.projectId)){ if(!p.tags)p.tags=[]; if(!p.scratch)p.scratch=''; if(!p.projectImage)p.projectImage=''; if(!p.projectImageName)p.projectImageName=''; toAdd.push(p); } });
+      // Backups may carry full base64 images (older export format, or a fresh
+      // export from this version) — those go into IndexedDB, not localStorage.
+      const withImages = toAdd.filter(p=>p.projectImage);
+      if (withImages.length) {
+        await Promise.all(withImages.map(p =>
+          idbPutImage(p.projectId, p.projectImage, p.projectImageName).then(()=>{ p.hasImage=true; }).catch(()=>{})
+        ));
+      }
+      const snapshot = db.projects.slice();
+      db.projects.push(...toAdd);
+      try {
+        saveDB();
+        renderProjects(); toast('Imported '+toAdd.length+' project'+(toAdd.length!==1?'s':'')+'.','success');
+      } catch(saveErr) {
+        db.projects = snapshot;
+        toast('Import failed: '+saveErr.message.slice(0,200),'error');
+      }
     }catch(err){toast('Import failed: '+err.message,'error');}
   };
   reader.readAsText(file); e.target.value='';
@@ -3025,10 +3215,14 @@ function parseCSV(text) {
   return rows;
 }
 
-function clearAllData() {
-  if(!confirm('Permanently delete ALL project data?'))return;
-  if(!confirm('Last chance — cannot be undone.'))return;
+async function clearAllData() {
+  const step1 = await showConfirm('This will permanently delete all projects, logs, BOM items, and photos.', { title:'Delete All Data?', confirmText:'Delete All' });
+  if (!step1) return;
+  const step2 = await showConfirm('This action cannot be undone. Everything will be gone for good.', { title:'Last Chance', confirmText:'Delete Everything' });
+  if (!step2) return;
+  try { const idb = await openImageDB(); await new Promise((res,rej)=>{ const tx=idb.transaction(IMG_STORE,'readwrite'); tx.objectStore(IMG_STORE).clear(); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); } catch(e) {}
   db.projects=[]; expandedCards={}; collapsedLogs.clear(); saveDB(); renderProjects();
+  toggleSettings();
   toast('All data cleared.','info');
 }
 
@@ -3049,6 +3243,46 @@ function toast(msg, type) {
   el.innerHTML = '<span>'+(icons[type]||'•')+'</span>'+msg;
   document.getElementById('toastWrap').appendChild(el);
   setTimeout(() => el.remove(), 4000);
+}
+
+// Themed replacement for window.confirm() — matches the app's own modal
+// styling instead of popping a native browser dialog. Returns a Promise<boolean>.
+function showConfirm(message, opts) {
+  opts = opts || {};
+  const title = opts.title || 'Are you sure?';
+  const confirmText = opts.confirmText || 'Confirm';
+  const cancelText = opts.cancelText || 'Cancel';
+  const danger = opts.danger !== false;
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML =
+      '<div class="confirm-sheet">'+
+        '<div class="confirm-body">'+
+          '<div class="confirm-title">'+esc(title)+'</div>'+
+          '<div class="confirm-msg">'+esc(message)+'</div>'+
+        '</div>'+
+        '<div class="confirm-actions">'+
+          '<button class="confirm-btn confirm-cancel">'+esc(cancelText)+'</button>'+
+          '<button class="confirm-btn '+(danger?'confirm-danger':'confirm-primary')+'">'+esc(confirmText)+'</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    let done = false;
+    const finish = result => {
+      if (done) return; done = true;
+      overlay.classList.remove('open');
+      document.removeEventListener('keydown', onKey);
+      setTimeout(() => overlay.remove(), 220);
+      resolve(result);
+    };
+    const onKey = e => { if (e.key==='Escape') finish(false); if (e.key==='Enter') finish(true); };
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('.confirm-cancel').onclick = () => finish(false);
+    overlay.querySelector('.confirm-danger, .confirm-primary').onclick = () => finish(true);
+    overlay.addEventListener('click', e => { if (e.target===overlay) finish(false); });
+  });
 }
 
 function esc(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -3271,7 +3505,7 @@ function applyLightMode() {
 // PNG CARD EXPORT  (AI Summary → beautiful themed card)
 // ═══════════════════════════════════════════════════════
 function exportCompilePNG() {
-  const text = document.getElementById('compileOutput').textContent;
+  const text = document.getElementById('compileOutput').value;
   if (!text || text.startsWith('Hit "Generate"')) { toast('Generate the summary first.','error'); return; }
   const p = db.projects.find(x => x.projectId === compilePid);
   if (!p) return;
@@ -3302,15 +3536,58 @@ function exportCompilePNG() {
   const statText  = esc(p.status.toUpperCase());
   const stageText = esc((p.activeStage||'').toUpperCase());
 
-  // Summary lines — left column only (narrower when image present)
+  // Summary lines — left column only (narrower when image present).
+  // Adaptive: a short summary keeps the polished tags+BOM widget row below it
+  // (compact mode). A longer, curated/refined summary gets that space instead
+  // — the footer stat bar already covers item count & totals, so nothing
+  // essential is lost, and the card actually shows what the user wrote.
   const colW = hasImg ? 520 : W - 72;
-  const maxChars = hasImg ? 55 : 70;
-  const sumLines = text.split('\n')
-    .filter(l => l.trim() && !l.startsWith('#') && !l.startsWith('*'))
-    .slice(0,3).map(l => esc(l.replace(/^[-•]\s*/,'').trim().slice(0, maxChars)));
+  const maxChars = hasImg ? 55 : 74;
+  const SUM_START_Y = 152, SUM_LINE_H = 17;
+  const COMPACT_MAX_Y = 250;  // ceiling that leaves room for the tags/BOM row
+  const TALL_MAX_Y    = 345;  // ceiling just above the footer stat bar
+  const compactCap = Math.floor((COMPACT_MAX_Y - SUM_START_Y) / SUM_LINE_H);
+  const tallCap     = Math.floor((TALL_MAX_Y - SUM_START_Y) / SUM_LINE_H);
 
-  // BOM mini cards — left column only
-  const bomSlice = p.bom.slice(0,4);
+  function wrapLine(str, max) {
+    const words = str.split(/\s+/).filter(Boolean);
+    const out = []; let cur = '';
+    words.forEach(w => {
+      const test = cur ? cur+' '+w : w;
+      if (test.length > max) { if (cur) out.push(cur); cur = w; }
+      else cur = test;
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  const rawContentLines = text.split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'))
+    .map(l => l.replace(/^[-*•]\s*/,'').replace(/\*\*/g,''));
+
+  function wrapAll(lines, max, cap) {
+    let out = [];
+    for (const line of lines) {
+      out.push(...wrapLine(line, max));
+      if (out.length >= cap) break;
+    }
+    const totalWords = lines.join(' ').split(/\s+/).filter(Boolean).length;
+    const usedWords = out.slice(0, cap).join(' ').split(/\s+/).filter(Boolean).length;
+    return { lines: out.slice(0, cap), truncated: usedWords < totalWords };
+  }
+
+  let fit = wrapAll(rawContentLines, maxChars, compactCap);
+  const compactMode = !fit.truncated;              // fits within the short box → keep tags+BOM
+  if (!compactMode) fit = wrapAll(rawContentLines, maxChars, tallCap);
+  if (fit.truncated && fit.lines.length) {
+    const last = fit.lines[fit.lines.length-1];
+    fit.lines[fit.lines.length-1] = last.length > maxChars-1 ? last.slice(0, maxChars-1)+'…' : last+' …';
+  }
+  const sumLines = fit.lines.map(l => esc(l));
+
+  // BOM mini cards — only shown in compact mode (long summaries use that space instead)
+  const bomSlice = compactMode ? p.bom.slice(0,4) : [];
   const cardW2 = Math.floor((colW - 36 - bomSlice.length * 8) / Math.max(bomSlice.length,1));
   const bomCardsSvg = bomSlice.map((b,i) => {
     const cx = 36 + i*(cardW2+8);
@@ -3324,9 +3601,9 @@ function exportCompilePNG() {
     </g>`;
   }).join('');
 
-  // Tags
+  // Tags — only shown in compact mode
   let tagX = 36;
-  const tagsSvg = (p.tags||[]).slice(0,5).map(t => {
+  const tagsSvg = !compactMode ? '' : (p.tags||[]).slice(0,5).map(t => {
     const tw = esc(t).length * 6.5 + 18;
     if (tagX + tw > colW) return '';
     const g = `<g>
@@ -3353,7 +3630,7 @@ function exportCompilePNG() {
   ` : '';
 
   const sumSvg = sumLines.map((l,i) =>
-    `<text x="36" y="${152 + i*19}" font-size="12" fill="#cbd5e1" font-family="Georgia,serif">${l}</text>`
+    `<text x="36" y="${SUM_START_Y + i*SUM_LINE_H}" font-size="12" fill="#cbd5e1" font-family="Georgia,serif">${l}</text>`
   ).join('');
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -3402,7 +3679,7 @@ function exportCompilePNG() {
   ${tagsSvg}
   <!-- BOM mini-cards -->
   ${bomCardsSvg}
-  ${p.bom.length > 4 ? `<text x="${36+bomSlice.length*(cardW2+8)+4}" y="316" font-size="10" fill="#475569" font-family="sans-serif">+${p.bom.length-4} more</text>` : ''}
+  ${compactMode && p.bom.length > 4 ? `<text x="${36+bomSlice.length*(cardW2+8)+4}" y="316" font-size="10" fill="#475569" font-family="sans-serif">+${p.bom.length-4} more</text>` : ''}
   <!-- image panel (actual image drawn on canvas) -->
   ${imgPanelSvg}
   <!-- stat bar -->
@@ -3640,6 +3917,8 @@ function enterApp() {
   }
 
   renderProjects();
+
+  hydrateImages().then(changed => { if (changed) renderProjects(); });
 
   if (db.settings.groqKey) updateLight('ok','Groq — Ready');
   else updateLight('','No Key');
