@@ -1,5 +1,5 @@
 // LazForge v2.0 Service Worker
-const CACHE = 'lazforge-v2.0';
+const CACHE = 'lazforge-v2.1';
 const ASSETS = [
   './',
   './index.html',
